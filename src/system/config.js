@@ -777,7 +777,7 @@ const OLDWORLD = {
         troubleshootingURL : "https://moo-man.github.io/OldWorld-FoundryVTT/pages/troubleshooting.html"
     },
     
-    premiumModules : {
+    moduleRegistry : {
         "whtow" : "Old World System",
         "tow-core" : "Old World Core Module"
     },

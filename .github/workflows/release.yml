@@ -2,90 +2,59 @@ name: Release
 
 on:
   push:
-    branches: [ "master" ]
-    tags: 
+    tags:
       - "*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release"
+        required: true
+
+permissions:
+  contents: write
 
 jobs:
   release:
-    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup NodeJS 17
-        uses: actions/setup-node@v3
+      - name: Determine tag
+        id: get-tag
+        run: |
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            echo "tag=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
         with:
-          node-version: "17"
-          
-      - name: Install node modules
-        run: npm install
-        
-      - name: Build Project
-        run: npm run release
-        
-      - name: Get System ID
-        id: systemID
-        uses: notiz-dev/github-action-json-property@release
-        with: 
-          path: 'system.json'
-          prop_path: 'id'
-          
-      - name: Get tag    
-        id: tag
-        uses: dawidd6/action-get-tag@v1.1.0
+          ref: ${{ steps.get-tag.outputs.tag }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build
+        run: npm ci && npm run release
 
       - name: Create ZIP
+        run: cd build && zip -r ../whtow.zip *
+
+      - name: Patch system.json URLs
         run: |
-          cd build
-          zip -r ../${{steps.systemID.outputs.prop}}.zip *
-          
-      - name: Set Download Link
-        uses: jossef/action-set-json-field@v2
-        with:
-          file: './system.json'
-          field: 'download'
-          value: "https://github.com/${{github.repository}}/releases/download/${{steps.tag.outputs.tag}}/${{steps.systemID.outputs.prop}}.zip"
+          TAG="${{ steps.get-tag.outputs.tag }}"
+          jq --arg tag "$TAG" \
+            '.download = "https://github.com/pfizrak/OldWorld-FoundryVTT/releases/download/\($tag)/whtow.zip"
+           | .manifest = "https://github.com/pfizrak/OldWorld-FoundryVTT/releases/latest/download/system.json"' \
+            system.json > system_patched.json
+          mv system_patched.json system.json
 
-      - name: Get mininum
-        id: minimum
-        uses: notiz-dev/github-action-json-property@release
-        with: 
-          path: 'system.json'
-          prop_path: 'compatibility.minimum'
-
-      - name: Get verified
-        id: verified
-        uses: notiz-dev/github-action-json-property@release
-        with: 
-          path: 'system.json'
-          prop_path: 'compatibility.verified'
-
-      - name: Get maximum
-        id: maximum
-        uses: notiz-dev/github-action-json-property@release
-        with: 
-          path: 'system.json'
-          prop_path: 'compatibility.maximum'
-
-      - name: Foundry Release API
-        uses: fjogeleit/http-request-action@v1
-        with:
-          url: 'https://api.foundryvtt.com/_api/packages/release_version'
-          method: 'POST'
-          customHeaders: '{"Content-Type": "application/json", "Authorization" : "${{ secrets.FOUNDRY_KEY }}"}'
-          data: '{"dry_run": false, "id" : "${{steps.systemID.outputs.prop}}", "release": {"version" :  "${{steps.tag.outputs.tag}}", "manifest": "https://raw.githubusercontent.com/${{github.repository}}/${{steps.tag.outputs.tag}}/system.json", "notes" : "https://github.com/${{github.repository}}/releases/tag/${{steps.tag.outputs.tag}}", "compatibility" : {"minimum": "${{steps.minimum.outputs.prop}}", "verified": "${{steps.verified.outputs.prop}}", "maximum": "${{steps.maximum.outputs.prop}}"} } }'
-          
-      # - name: Generate Changelog
-      #   id: changelog
-      #   uses: mikepenz/release-changelog-builder-action@v2
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.PAT }}
-          
-      - name: Create Release
-        uses: ncipollo/release-action@v1.9.0
-        with:
-          token: ${{ secrets.PAT }}
-          artifacts: "./system.json, ./${{steps.systemID.outputs.prop}}.zip"
-          draft : true
-          generateReleaseNotes : true
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.get-tag.outputs.tag }}"
+          gh release delete "$TAG" --yes 2>/dev/null || true
+          gh release create "$TAG" whtow.zip system.json \
+            --title "$TAG" \
+            --generate-notes
