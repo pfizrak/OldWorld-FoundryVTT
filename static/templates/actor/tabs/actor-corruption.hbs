@@ -18,7 +18,7 @@
             {{/unless}}
         </div>
     </div>
-    <button button  type="button" data-action="corruptionTest">{{localize "TOW.Sheet.PromptCorruptionTest"}}</button>
+    <button type="button" data-action="corruptionTest">{{localize "TOW.Sheet.PromptCorruptionTest"}}</button>
 
     {{#unless system.corruption.document}}
         {{#if (eq system.corruption.state "vulnerable")}}

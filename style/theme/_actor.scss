@@ -35,6 +35,14 @@ body.whtow-theme {
             }
         }
 
+        &.minimized .window-header {
+            padding-left: 0px;
+            top: -18px;
+            .window-title {
+                visibility: visible;
+            }
+        }
+
         .window-content {
             padding: 0px; // border width of app acts as padding
 
@@ -129,6 +137,14 @@ body.whtow-theme {
             }
         }
 
+        &.minimized .window-header {
+            padding-left: 0px;
+            top: -18px;
+            .window-title {
+                visibility: visible;
+            }
+        }
+
 
 
         .characteristics {
@@ -181,41 +197,40 @@ body.whtow-theme {
     .application.warhammer.actor.npc {
 
 
-        &::before {
-            content: "";
-            position: absolute;
-            background: url(./assets/ui/statblock-header.webp);
-            background-size: contain;
-            background-repeat: no-repeat;
-            height: 60px;
-            width: 500px;
-            z-index: 0;
-            right: 50%;
-            top: -20px;
-            margin-right: -280px;
-            filter: drop-shadow(0 0 0.2rem black);
+        &:not(.minimized)
+        {
+            &::before {
+                content: "";
+                position: absolute;
+                background: url(./assets/ui/statblock-header.webp);
+                background-size: contain;
+                background-repeat: no-repeat;
+                height: 60px;
+                width: 500px;
+                z-index: 0;
+                right: 50%;
+                top: -20px;
+                margin-right: -280px;
+                filter: drop-shadow(0 0 0.2rem black);
+            }
+
+            .window-header {
+                .window-title {
+                    margin-top: 8px;
+                    text-align: center;
+                    position: relative;
+                    font-size: var(--font-size-24);
+                    font-variant: small-caps;
+                    font-family: var(--font-header);
+                    color: var(--tow-blue);
+                }
+            }
         }
 
 
         &.minimized {
             .window-header {
                 padding-left: 0px;
-            }
-        }
-
-        .window-header {
-
-
-            .window-title {
-                margin-top: 8px;
-                text-align: center;
-                position: relative;
-                font-size: var(--font-size-24);
-                font-variant: small-caps;
-                font-family: var(--font-header);
-                color: var(--tow-blue);
-
-
             }
         }
 

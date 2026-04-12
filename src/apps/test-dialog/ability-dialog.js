@@ -30,7 +30,7 @@ export default class AbilityAttackDialog extends TestDialog
 
     get isAttack()
     {
-        return true;
+        return this.skill != "defence";
     }
 
     get attack()

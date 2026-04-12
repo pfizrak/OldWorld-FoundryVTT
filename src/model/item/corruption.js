@@ -50,7 +50,7 @@ export class CorruptionModel extends BaseItemModel {
 
     async _onUpdate(data, options, user)
     {
-        if (options.runCorruptionEffect)
+        if (options.runCorruptionEffect && user == game.user.id)
         {
             this[options.runCorruptionEffect].effect.document.handleImmediateScripts(data, options, user);
         }

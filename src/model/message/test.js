@@ -52,7 +52,7 @@ export class OldWorldTestMessageModel extends WarhammerTestMessageModel
                 let owner = warhammer.utility.getActiveDocumentOwner(actor);
                 if (owner?.id == game.user.id)
                 {
-                    actor.system.registerOpposed(test);
+                    actor.system.registerOpposed(this.parent);
                 }
             }
         }

@@ -21,9 +21,9 @@ export class BaseActorModel extends BaseWarhammerActorModel
         return this.opposed?.system.test;
     }
 
-    registerOpposed(test)
+    registerOpposed(message)
     {
-        this.parent.update({"system.opposed" : test.message});
+        this.parent.update({"system.opposed" : message});
     }
 
     clearOpposed()
