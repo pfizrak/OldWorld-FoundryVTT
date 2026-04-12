@@ -56,13 +56,7 @@
                     <div class="row-content">
                         <div class="list-name">
                             <select data-action="editList" data-ipath="skill">
-                                {{#select this.skill}}
-                                    <option value="*">Any</option>
-                                    <option value="">All other Skills</option>
-                                {{#each (config "skills")}}
-                                    <option value="{{@key}}">{{this}}</option>
-                                {{/each}}
-                                {{/select}}
+                                {{selectOptions ../skillOptions selected=this.skill}}
                             </select>
                         </div>
                         <div class="small"><input type="number" data-action="editList" data-ipath="value" value="{{this.value}}"></div>

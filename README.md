@@ -7,7 +7,7 @@ The **official** system for playing in *The World of Legend* on [Foundry VTT](ht
 
 ![](https://img.shields.io/github/downloads/moo-man/OldWorld-FoundryVTT/latest/whtow.zip?label=Downloads%20%28Latest%20Version%29)
 
-![](https://img.shields.io/badge/FoundryVTT%20Compatibility-V13-orange)
+![](https://img.shields.io/badge/FoundryVTT%20Compatibility-V14-orange)
 
 ## Install
 1. Go to the setup page and choose **Game Systems**.

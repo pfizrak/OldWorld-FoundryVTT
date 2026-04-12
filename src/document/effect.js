@@ -90,4 +90,31 @@ export class OldWorldEffect extends WarhammerActiveEffect
             return this.item.system.test.label;
         }
     }
+
+    get changeKeys()
+    {
+        return {choices: Object.keys(game.oldworld.config.characteristics).map(i => {
+            return {
+                value: `system.characteristics.${i}.value`,
+                label: `${game.oldworld.config.characteristics[i]} (${game.i18n.localize("TOW.Modifier")})`,
+                group: "Characteristics"
+            }
+        }).concat(Object.keys(game.oldworld.config.skills).map(i => {
+            return {
+                value: `system.skills.${i}.value`,
+                label: `${game.oldworld.config.skills[i]} (${game.i18n.localize("TOW.Modifier")})`,
+                group: "Skills"
+            }
+        })).concat([
+            {value: "system.resilience.value", label: game.i18n.localize("TOW.Sheet.Resilience"), group: "Other"},
+            {value: "system.magic.level", label: game.i18n.localize("TOW.MagicLevel"), group: "Other"},
+            {value: "system.speed.value", label: game.i18n.localize("TOW.Sheet.Speed"), group: "Other"},
+            {value: "system.speed.modifier", label: game.i18n.localize("TOW.Sheet.SpeedModifier"), group: "Other"},
+            {value: "system.excludeStaggeredOptions", label: game.i18n.localize("TOW.Sheet.PreventStaggeredOption"), group: "Other"},
+        ]), 
+        groups: ['Characteristics',
+        'Skills',
+        'Other',
+        ].map(i => game.i18n.localize(i))};
+    }
 }
