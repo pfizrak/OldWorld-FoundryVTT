@@ -42,7 +42,7 @@
     "requires": [{
       "id": "warhammer-lib",
       "type": "module",
-      "manifest": "https://raw.githubusercontent.com/moo-man/WarhammerLibrary-FVTT/3.0.2/module.json",
+      "manifest": "https://github.com/pfizrak/WarhammerLibrary-FVTT/releases/latest/download/module.json",
       "compatibility": {
         "minimum" : "2.9.0",
         "verified": "3.0.2"
@@ -88,10 +88,10 @@
   },
   "primaryTokenAttribute": null,
   "secondaryTokenAttribute": null,
-  "url": "https://github.com/moo-man/OldWorld-FoundryVTT",
+  "url": "https://github.com/pfizrak/OldWorld-FoundryVTT",
   "socket": true,
-  "manifest": "https://github.com/moo-man/OldWorld-FoundryVTT/releases/latest/download/system.json",
-  "download": "https://github.com/moo-man/OldWorld-FoundryVTT/releases/download/1.1.0/whtow.zip",
+  "manifest": "https://github.com/pfizrak/OldWorld-FoundryVTT/releases/latest/download/system.json",
+  "download": "https://github.com/pfizrak/OldWorld-FoundryVTT/releases/download/1.1.0/whtow.zip",
   "license": "LICENSE.txt"
 }
 
