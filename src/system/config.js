@@ -878,7 +878,7 @@ const OLDWORLD = {
         successMessage : "Thank you for your submission. If you wish to monitor or follow up with additional details like screenshots, you can find your issue here: @URL",
     },
     
-    premiumModules : {
+    moduleRegistry : {
         "whtow" : "Old World System",
         "tow-core" : "Old World Core Module",
         "tow-starter-set" : "Starter Set"

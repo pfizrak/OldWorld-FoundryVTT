@@ -1,0 +1,117 @@
+name: Sync upstream and release
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check upstream for new release
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          UPSTREAM=$(gh release view --repo moo-man/OldWorld-FoundryVTT --json tagName -q .tagName)
+          FORK=$(gh release view --repo pfizrak/OldWorld-FoundryVTT --json tagName -q .tagName 2>/dev/null || echo "none")
+          echo "upstream=$UPSTREAM" >> "$GITHUB_OUTPUT"
+          echo "fork=$FORK" >> "$GITHUB_OUTPUT"
+          if [ "$UPSTREAM" = "$FORK" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout fork
+        if: steps.check.outputs.skip == 'false'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ github.token }}
+
+      - name: Reset to upstream tag
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          TAG="${{ steps.check.outputs.upstream }}"
+          git remote add upstream https://github.com/moo-man/OldWorld-FoundryVTT.git || true
+          git fetch upstream --tags --force
+          git checkout -B master "refs/tags/$TAG"
+
+      - name: Apply patches
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          TAG="${{ steps.check.outputs.upstream }}"
+
+          # Rename premiumModules → moduleRegistry
+          sed -i 's/\bpremiumModules\b/moduleRegistry/g' src/system/config.js
+          echo "--- premiumModules patch ---"
+          grep -n 'moduleRegistry' src/system/config.js || { echo "PATCH FAILED"; exit 1; }
+
+          # Rewrite system.json URLs: system repo
+          sed -i 's|moo-man/OldWorld-FoundryVTT|pfizrak/OldWorld-FoundryVTT|g' system.json
+
+          # Rewrite system.json URLs: warhammer-lib manifest
+          sed -i 's|moo-man/WarhammerLibrary-FVTT|pfizrak/WarhammerLibrary-FVTT|g' system.json
+
+          # Fix warhammer-lib manifest URL to use releases/latest/download
+          sed -i 's|raw.githubusercontent.com/pfizrak/WarhammerLibrary-FVTT/[^/]*/module.json|github.com/pfizrak/WarhammerLibrary-FVTT/releases/latest/download/module.json|g' system.json
+
+          echo "--- system.json after patches ---"
+          cat system.json
+
+      - name: Restore fork workflows
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          mkdir -p .github/workflows
+          curl -sL "https://raw.githubusercontent.com/pfizrak/OldWorld-FoundryVTT/master/.github/workflows/release.yml" \
+            -o .github/workflows/release.yml
+          curl -sL "https://raw.githubusercontent.com/pfizrak/OldWorld-FoundryVTT/master/.github/workflows/sync-and-release.yml" \
+            -o .github/workflows/sync-and-release.yml
+
+      - name: Commit, tag and push
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          TAG="${{ steps.check.outputs.upstream }}"
+          git config user.name "pfizrak"
+          git config user.email "209234886+pfizrak@users.noreply.github.com"
+          git add -A
+          git commit -m "Sync upstream $TAG with fork patches"
+          git tag -f "$TAG"
+          git push --force origin master
+          git push --force origin "refs/tags/$TAG"
+
+      - name: Trigger release workflow
+        if: steps.check.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.check.outputs.upstream }}"
+          gh workflow run release.yml -f tag="$TAG" --repo pfizrak/OldWorld-FoundryVTT
+
+      - name: Wait for release and copy notes
+        if: steps.check.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.check.outputs.upstream }}"
+          echo "Waiting for release workflow to start..."
+          sleep 15
+          RUN_ID=$(gh run list --workflow=release.yml --limit=1 --json databaseId -q '.[0].databaseId' --repo pfizrak/OldWorld-FoundryVTT)
+          echo "Watching run $RUN_ID ..."
+          gh run watch "$RUN_ID" --exit-status --repo pfizrak/OldWorld-FoundryVTT || true
+
+          # Copy release notes from upstream
+          NOTES=$(gh release view "$TAG" --repo moo-man/OldWorld-FoundryVTT --json body -q .body 2>/dev/null || echo "")
+          if [ -n "$NOTES" ]; then
+            gh release edit "$TAG" --notes "$NOTES" --repo pfizrak/OldWorld-FoundryVTT
+          fi
